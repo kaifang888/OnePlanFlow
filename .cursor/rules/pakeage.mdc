@@ -1,0 +1,81 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description:
+globs: **/*.java
+alwaysApply: false
+---
+# oneplanflow项目结构规范
+## 业务规则
+[详细设计文档.md](mdc:.cursor/docs/详细设计文档.md)文档为你提供了审批流的整体业务和技术架构情况。这是你主要的背景知识。
+## 关键规则
+- **所有代码必须按照模块化架构放置在正确的位置**，详见下方模块职责说明
+- **枚举和常量优先使用公共模块**:
+  - 公共枚举必须放在 `common` 目录的 `com.itkf.oneflowplan.common.enums` 包下
+  - 公共常量必须放在 `common` 目录的 `com.itkf.oneflowplan.common.constants` 包下
+  - 仅当枚举或常量是模块特定的，才可放在对应模块中
+- **接口定义必须先于实现**，使用接口和实现分离的方式
+- **严格遵循分层架构，禁止跨层调用**，必须通过合适的接口调用
+- **数据对象(DO)必须放在正确的位置**，详见下方DO规范说明
+- 公用的方法，必须先写interface再写实现。每个interface有Base类实现，每个模块可以在Base类实现的基础上进行自己的override方式
+## 模块职责
+### 1. 业务服务层
+- 路径: `com.itkf.oneflowplan.serve`
+- 责任: 实现业务逻辑，业务编排，调用领域层
+- 包含:
+  - `service`: 核心业务服务接口和实现类
+  - `dto`: 返回值传输对象，及数据结构转换类
+  - `executor`: 入参传输对象，及数据结构转换类
+### 2. 客户端层
+- 路径: `com.itkf.oneflowplan.controll`
+- 责任: 定义对外暴露的接口和处理外部请求
+- 包含:
+  - `consumer`: 消息队列消费者客户端实现
+  - `controller`: Web控制器，处理HTTP请求
+### 3. 领域层
+- 路径: `com.itkf.oneflowplan.domain`
+- 责任: 定义领域模型和领域逻辑
+- 包含:
+  - `entity`: 领域模型，封装业务实体和规则
+  - `enums`: 领域特定的枚举类型
+### 4. 配置层
+ - 路径: `com.itkf.oneflowplan.config`
+ - 责任: 定义项目中的配置类
+### 5. 配置层
+ - 路径: `com.itkf.oneflowplan.util`
+ - 责任: 定义项目中的工具类
+## 数据对象(DO)规范
+### DO对象存放位置
+**关键规则**: 数据对象(DO)必须放在领域层模块的entity包中，严格遵循以下位置规范：
+1. **数据访问对象**:
+   - 位置: `OneFlowPlan/src/main/java/com/itkf/oneflowplan/domain/entity/
+   - 命名规范: 使用业务实体名加DO后缀，如`OrderDO.java`
+   - 使用场景: 用于数据库表映射的对象，通常与数据库表结构一一对应
+### DO对象编写规范
+1. **注解规范**:
+   - 必须使用`@Data`或手动实现getter/setter方法
+   - 推荐使用`@Builder`、`@NoArgsConstructor`、`@AllArgsConstructor`等Lombok注解减少样板代码
+   - MyBatis映射对象必须添加`@TableName("表名")`注解
+2. **属性规范**:
+   - 必须注释说明每个字段的业务含义
+   - 字段命名必须使用驼峰式，与数据库字段命名保持对应关系
+   - 日期类型优先使用`java.util.Date`类型
+3. **类注释规范**:
+   - 必须包含类级别JavaDoc注释，说明该DO对象的业务用途
+   - 注释格式必须包含"数据对象"说明和对应的数据表说明
+### 使用DO对象的代码规范
+1. **Mapper接口定义**:
+   - Mapper接口必须指定对应的DO类型
+   - 示例: `public interface OrderMapper extends BaseMapper<OrderDO>`
+2. **DO对象转换**:
+   - DO对象到领域对象的转换应在Repository实现类中进行
+   - 禁止在Service层直接使用DO对象
+   - 必须通过Repository接口间接访问DO对象
+## 开发新功能流程规范
+1. **实现数据访问**: 在领域层中实现数据对象和数据访问
+2. **实现业务逻辑**: 在业务服务层中实现业务服务
+
+3. **实现接口层**: 在客户端层中实现对外接口
